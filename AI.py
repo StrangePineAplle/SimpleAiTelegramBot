@@ -4,8 +4,10 @@ from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains import LLMChain
 import warnings
+import httpx
 warnings.filterwarnings('ignore')
 
+client = httpx.Client(timeout=httpx.Timeout(10.0))
 
 class AI:
     def __init__(self, pathToData = "./data/data_x.txt", key = None):
