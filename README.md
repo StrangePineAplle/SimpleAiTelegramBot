@@ -1,5 +1,3 @@
-# SimpleAiTelegramBot
-
 # AI University Consultant Bot
 
 ## Overview
