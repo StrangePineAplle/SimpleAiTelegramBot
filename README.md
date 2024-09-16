@@ -1,4 +1,6 @@
 # AI University Consultant Bot
+![Python](https://img.shields.io/badge/python-v3.6+-blue.svg)
+
 
 ## Overview
 The **AI University Consultant Bot** is a Telegram bot designed to assist users with inquiries related to university structure, history, and contact information. Utilizing the GigaChat language model for natural language processing and Retrieval-Augmented Generation (RAG) to provide factual responses, this bot offers accurate and relevant information to students and prospective applicants.
