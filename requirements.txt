@@ -1,4 +1,8 @@
+# Используем более новые совместимые версии
 pyTelegramBotAPI==4.14.0
-langchain-gigachat==0.3.11
+langchain>=0.3.0,<0.4.0
+langchain-community>=0.3.0,<0.4.0
+langchain-gigachat>=0.3.0,<0.4.0
 python-dotenv>=1.0.0
 httpx>=0.26.0
+pydantic>=2.0.0,<3.0.0
