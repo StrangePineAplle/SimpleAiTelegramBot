@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  techstream-bot:
+    build: .
+    container_name: techstream_bot
+    restart: unless-stopped
+    volumes:
+      - ./data:/TGBOT/data
+      - ./logs:/TGBOT/logs
+    env_file:
+      - .env
