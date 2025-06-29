@@ -1,8 +1,6 @@
-from langchain import LLMChain
-from langchain.prompts import PromptTemplate
 from langchain_gigachat import GigaChat
-from langchain_community.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
 import warnings
 import os
 
@@ -15,45 +13,34 @@ class AI:
         
         self.pathToData = pathToData
         
-        # Проверяем существование файла
-        if not os.path.exists(pathToData):
-            print(f"Предупреждение: файл {pathToData} не найден!")
-            # Создаем минимальные данные
-            self.documents = [{"page_content": "ТехСтрим - инновационная IT-компания, основанная в 2018 году в Санкт-Петербурге."}]
-        else:
-            # Загружаем корпоративные данные ТехСтрим
-            loader = TextLoader(self.pathToData, encoding='UTF-8')
-            documents = loader.load()
-            
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000,
-                chunk_overlap=0,
-                length_function=len,
-                is_separator_regex=False,
-            )
-            
-            self.documents = text_splitter.split_documents(documents)
+        # Загружаем данные простым способом
+        try:
+            with open(pathToData, 'r', encoding='utf-8') as file:
+                content = file.read()
+            self.documents = content
+        except FileNotFoundError:
+            print(f"Файл {pathToData} не найден, используем базовые данные")
+            self.documents = "ТехСтрим - инновационная IT-компания, основанная в 2018 году."
         
-        # Инициализация GigaChat
+        # GigaChat
         giga = GigaChat(
             credentials=key,
             model='GigaChat:latest',
             verify_ssl_certs=False
         )
         
-        # Создаем промпт без использования hub
+        # Простой промпт
         prompt = PromptTemplate(
-            input_variables=["input_documents", "question"],
+            input_variables=["context", "question"],
             template="""
-Ты корпоративный ассистент IT-компании ТехСтрим. 
-Используй предоставленную информацию о компании для ответа на вопросы.
+Ты корпоративный ассистент IT-компании ТехСтрим.
 
 Информация о компании:
-{input_documents}
+{context}
 
-Вопрос пользователя: {question}
+Вопрос: {question}
 
-Дай подробный и полезный ответ на основе информации о ТехСтрим:
+Ответ:
 """
         )
         
@@ -61,20 +48,11 @@ class AI:
     
     def askAI(self, input_text='Расскажи о компании ТехСтрим'):
         try:
-            # Подготавливаем документы для передачи
-            docs_text = ""
-            for doc in self.documents:
-                if hasattr(doc, 'page_content'):
-                    docs_text += doc.page_content + "\n"
-                else:
-                    docs_text += str(doc) + "\n"
-            
             result = self.chain.invoke({
-                "input_documents": docs_text,
+                "context": self.documents,
                 "question": input_text
             })
-            
             return result["text"]
         except Exception as e:
-            print(f"Ошибка в askAI: {e}")
-            return "Извините, произошла ошибка при обработке вашего запроса. Попробуйте позже."
+            print(f"Ошибка: {e}")
+            return "Извините, произошла ошибка при обработке запроса."
