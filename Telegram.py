@@ -116,7 +116,7 @@ def handle_text(message):
             else:
                 chatAI = AI()
                 bot.send_message(message.from_user.id, 
-                    chatAI.askAI(input=message.text), 
+                    chatAI.askAI(input_text=message.text), 
                     reply_markup=markup)
     else:
         bot.send_message(message.from_user.id, 
