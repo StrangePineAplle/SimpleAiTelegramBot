@@ -1,16 +1,4 @@
-# Telegram Bot API
 pyTelegramBotAPI==4.14.0
-
-# LangChain пакеты (актуальные версии из поиска)
-langchain-community>=0.0.38
-langchain-gigachat==0.3.11
-langchain>=0.3.0
-
-# Переменные окружения
-python-dotenv>=1.0.0
-
-# HTTP клиент
-httpx>=0.26.0
-
-# Pydantic v2 для совместимости
-pydantic>=2.0.0
+langchain-gigachat
+python-dotenv
+httpx
