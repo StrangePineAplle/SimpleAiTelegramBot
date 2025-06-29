@@ -1,78 +1,80 @@
-# Исправленные импорты для GigaChat
-try:
-    # Пробуем новый путь (langchain-gigachat)
-    from langchain_gigachat import GigaChat
-except ImportError:
-    try:
-        # Fallback на старый путь (langchain-community)
-        from langchain_community.chat_models.gigachat import GigaChat
-    except ImportError:
-        # Альтернативный импорт
-        from langchain_community.chat_models import GigaChat
-
-from langchain import hub
+from langchain import LLMChain
+from langchain.prompts import PromptTemplate
+from langchain_gigachat import GigaChat
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains import LLMChain
 import warnings
-import httpx
+import os
 
 warnings.filterwarnings('ignore')
-client = httpx.Client(timeout=httpx.Timeout(10.0))
 
 class AI:
-    def __init__(self, pathToData = "./data/company_data.txt", key = None):
-        if key == None: 
+    def __init__(self, pathToData="./data/company_data.txt", key=None):
+        if key is None: 
             key = "ZDVkODE5NjctMTJiZS00ZmE1LWI1ZGItNGRiYjg4OWJkMjQ1OjdlMjMwZjUyLWRlMzItNGE4NS05YzcwLWYyMDBiZjk5N2IwZg=="
         
         self.pathToData = pathToData
-        auth = key  # ключ доступа к GigaChat
         
-        giga = GigaChat(credentials=auth,
-                       model='GigaChat:latest',
-                       verify_ssl_certs=False)
+        # Проверяем существование файла
+        if not os.path.exists(pathToData):
+            print(f"Предупреждение: файл {pathToData} не найден!")
+            # Создаем минимальные данные
+            self.documents = [{"page_content": "ТехСтрим - инновационная IT-компания, основанная в 2018 году в Санкт-Петербурге."}]
+        else:
+            # Загружаем корпоративные данные ТехСтрим
+            loader = TextLoader(self.pathToData, encoding='UTF-8')
+            documents = loader.load()
+            
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=1000,
+                chunk_overlap=0,
+                length_function=len,
+                is_separator_regex=False,
+            )
+            
+            self.documents = text_splitter.split_documents(documents)
         
-        # Загружаем корпоративные данные ТехСтрим
-        loader = TextLoader(self.pathToData, encoding = 'UTF-8')
-        self.documents = loader.load()
-        
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size = 1000,
-            chunk_overlap = 0,
-            length_function = len,
-            is_separator_regex = False,
+        # Инициализация GigaChat
+        giga = GigaChat(
+            credentials=key,
+            model='GigaChat:latest',
+            verify_ssl_certs=False
         )
         
-        self.documents = text_splitter.split_documents(self.documents)
+        # Создаем промпт без использования hub
+        prompt = PromptTemplate(
+            input_variables=["input_documents", "question"],
+            template="""
+Ты корпоративный ассистент IT-компании ТехСтрим. 
+Используй предоставленную информацию о компании для ответа на вопросы.
+
+Информация о компании:
+{input_documents}
+
+Вопрос пользователя: {question}
+
+Дай подробный и полезный ответ на основе информации о ТехСтрим:
+"""
+        )
         
-        # Создаем простой промпт, если hub недоступен
-        try:
-            techstream_prompt = hub.pull("moneco/techstream_corporate_assistant")
-        except:
-            from langchain.prompts import PromptTemplate
-            techstream_prompt = PromptTemplate(
-                input_variables=["input_documents", "question"],
-                template="""
-                Используя предоставленную информацию о компании ТехСтрим, ответь на вопрос пользователя.
-                
-                Информация о компании:
-                {input_documents}
-                
-                Вопрос: {question}
-                
-                Ответ:
-                """
-            )
-        
-        self.chain = LLMChain(prompt=techstream_prompt, llm=giga)
+        self.chain = LLMChain(prompt=prompt, llm=giga)
     
-    def askAI(self, chain = None, documents = None, input = 'Расскажи о компании ТехСтрим'):
-        if chain == None: chain = self.chain
-        if documents == None: documents = self.documents
-        
-        res = chain.invoke({
-            "input_documents": documents,
-            "question" : input
-        })
-        
-        return res["text"]
+    def askAI(self, input_text='Расскажи о компании ТехСтрим'):
+        try:
+            # Подготавливаем документы для передачи
+            docs_text = ""
+            for doc in self.documents:
+                if hasattr(doc, 'page_content'):
+                    docs_text += doc.page_content + "\n"
+                else:
+                    docs_text += str(doc) + "\n"
+            
+            result = self.chain.invoke({
+                "input_documents": docs_text,
+                "question": input_text
+            })
+            
+            return result["text"]
+        except Exception as e:
+            print(f"Ошибка в askAI: {e}")
+            return "Извините, произошла ошибка при обработке вашего запроса. Попробуйте позже."
