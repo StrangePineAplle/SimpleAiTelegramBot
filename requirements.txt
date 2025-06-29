@@ -1,10 +1,18 @@
-telebot==0.0.5
+# Telegram Bot API
 pyTelegramBotAPI==4.14.0
-langchain==0.1.1
-langchain-community==0.0.13
-gigachat==0.1.14
+
+# LangChain и GigaChat
+langchain==0.1.20
+langchain-community==0.0.38
+langchain-gigachat==0.1.9
+gigachat==0.1.39
+
+# Переменные окружения
 python-dotenv==1.0.0
-httpx==0.26.0
-smtplib
-email
-datetime
+
+# HTTP клиент (требуется для gigachat)
+httpx>=0.24.0,<1.0.0
+
+# Дополнительные зависимости для текстовой обработки
+pydantic>=1.10.0
+
